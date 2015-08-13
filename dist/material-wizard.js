@@ -1,11 +1,36 @@
 /**
  * 
- * @version v0.0.2 - 2015-06-19 * @link 
+ * @version v0.0.2 - 2015-08-13 * @link 
  * @author Adel
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */(function() {
   'use strict';
-  var mtWizard = angular.module('material.wizard', ['ngMaterial', 'ngAnimate']);
+  var mtWizard = angular.module('material.wizard', ['ngMaterial', 'ngAnimate'])
+                        .run(function($templateCache){
+                          var template =
+                            '<div layout="column" class="md-whiteframe-z1" layout-padding>' +
+                            ' <div class="wizard-header" layout="row" layout-sm="column" layout-align="space-between start" layout-margin>' +
+                            '  <div class="wizard-header-step-title"><h3>{{curentStepTitle}}</h3></div>' +
+                            '  <div class="wizard-header-step-list" layout="row" layout-align="end center" layout-margin>' +
+                            '   <div class="wizard-header-step" ng-repeat="step in steps" layout="row" layout-align="center center" ng-click="goto($index)">' +
+                            '    <md-button class="md-fab wizard-button" aria-label="step button">' +
+                            '      <div class="circle-loader-wrap" ng-style="step.progresscircleStyle"><div class="circle-loader-wrap after" ng-style="step.wizardBtnStyle"></div></div>' +
+                            '      <div class="wizard-step-img"><md-icon md-svg-src="{{step.stepImg}}" class="icon"></md-icon></div>' +
+                            '      <md-progress-circular md-mode="determinate" md-diameter="63" value="{{step.stepFill}}"></md-progress-circular>' +
+                            '    </md-button>' +
+                            '    <md-progress-linear md-mode="determinate" value="0" md-mode="buffer" md-buffer-value="100" class="md-primary wizard-progress-linear" ng-show="$index<steps.length-1"></md-progress-linear>' +
+                            '   </div>' +
+                            '  </div>' +
+                            ' </div>' +
+                            ' <md-divider></md-divider>' +
+                            ' <div layout="row" class="wizard-container" ng-transclude></div>' +
+                            ' <div class="wizard-paginator" layout="row" layout-align="end center">' +
+                            '  <md-button class="md-fab wizard-chevron-left" aria-label="previous" ng-click="previous()"  ng-disabled="chevronsAlwaysVisible && selectedIndex == 0" ng-hide="!chevronsAlwaysVisible && selectedIndex == 0"></md-button>' +
+                            '  <md-button class="md-fab {{ (selectedIndex == steps.length - (1)) ? \'wizard-finish\' : \'wizard-chevron-right\' }}" aria-label="finish" ng-click="(selectedIndex != steps.length - (1)) ? next(): onFinish()"></md-button>' +
+                            ' </div>' +
+                            '</div>';
+                          $templateCache.put('material-wizard.tmmpl.html', template);
+                        });
 
   /**
    * @ngdoc directive
@@ -92,34 +117,11 @@
             stepScope.wizardBtnStyle = {"background-color": active ? $scope.activeBtnBgColor : $scope.btnBgColor};
           }
         }],
-        template: function (element,attrs) {
-          var chevronsStrategy = attrs.chevronsAlwaysVisible ? 'ng-disabled' : 'ng-hide';
-          var template =
-            '<div layout="column" class="md-whiteframe-z1" layout-padding>' +
-            ' <div class="wizard-header" layout="row" layout-sm="column" layout-align="space-between start" layout-margin>' +
-            '  <div class="wizard-header-step-title"><h3>{{curentStepTitle}}</h3></div>' +
-            '  <div class="wizard-header-step-list" layout="row" layout-align="end center" layout-margin>' +
-            '   <div class="wizard-header-step" ng-repeat="step in steps" layout="row" layout-align="center center" ng-click="goto($index)">' +
-            '    <md-button class="md-fab wizard-button" aria-label="step button">' +
-            '      <div class="circle-loader-wrap" ng-style="step.progresscircleStyle"><div class="circle-loader-wrap after" ng-style="step.wizardBtnStyle"></div></div>' +
-            '      <div class="wizard-step-img"><md-icon md-svg-src="{{step.stepImg}}" class="icon"></md-icon></div>' +
-            '      <md-progress-circular md-mode="determinate" md-diameter="63" value="{{step.stepFill}}"></md-progress-circular>' +
-            '    </md-button>' +
-            '    <md-progress-linear md-mode="determinate" value="0" md-mode="buffer" md-buffer-value="100" class="md-primary wizard-progress-linear" ng-show="$index<steps.length-1"></md-progress-linear>' +
-            '   </div>' +
-            '  </div>' +
-            ' </div>' +
-            ' <md-divider></md-divider>' +
-            ' <div layout="row" class="wizard-container" ng-transclude></div>' +
-            ' <div class="wizard-paginator" layout="row" layout-align="end center">' +
-            '  <md-button class="md-fab wizard-chevron-left" aria-label="previous" ng-click="previous()" '+chevronsStrategy+'="selectedIndex == 0"></md-button>' +
-            '  <md-button class="md-fab {{ (selectedIndex == steps.length - (1)) ? \'wizard-finish\' : \'wizard-chevron-right\' }}" aria-label="finish" ng-click="(selectedIndex != steps.length - (1)) ? next(): onFinish()"></md-button>' +
-            ' </div>' +
-            '</div>';
-          return template;
-
+        templateUrl: function(elem, attr){
+          return attr.templateUrl ? attr.templateUrl : 'material-wizard.tmmpl.html';
         },
         link: function (scope, element, attrs) {
+          scope.chevronsAlwaysVisible = attrs.chevronsAlwaysVisible;
           var updateProgressStyle = function () {
             var progressBars = $document[0].querySelectorAll("md-progress-linear .md-container");
             angular.forEach(progressBars, function (progressBar) {
